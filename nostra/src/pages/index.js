@@ -10,8 +10,8 @@ import '@xyflow/react/dist/style.css';
 export default function Home() {
   const { signedAccountId, wallet } = useContext(NearContext);
   const [nodes, setNodes, onNodesChange] = useNodesState([
-    { id: '1', position: { x: 250, y: 0 }, data: { label: 'Node 1' } },
-    { id: '2', position: { x: 350, y: 100 }, data: { label: 'Node 2' } },
+    { id: '1', position: { x: 250, y: 0 }, data: { label: 'Node 1' }, style: { color: 'black' } },
+    { id: '2', position: { x: 350, y: 100 }, data: { label: 'Node 2' }, style: { color: 'black' } },
   ]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([
     { id: 'e1-2', source: '1', target: '2', animated: true, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
@@ -19,17 +19,19 @@ export default function Home() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newAgent, setNewAgent] = useState({ name: '', desc: '', prompt: '' });
+  const [agents, setAgents] = useState([]);
 
-  const blockList = [
-    { id: 'block1', label: 'Block 1' },
-    { id: 'block2', label: 'Block 2' },
-    { id: 'block3', label: 'Block 3' },
+  const actionList = [
+    { id: 'input', label: '📥 Input', type: 'input' },
+    { id: 'twitter-data', label: '🐦 Twitter Data', type: 'default' },
+    { id: 'defi-swap', label: '💱 DeFi Swap', type: 'output' },
   ];
 
   const onConnect = useCallback((params) => setEdges((eds) => addEdge({ ...params, animated: true, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)), []);
 
-  const onDragStart = (event, nodeType) => {
+  const onDragStart = (event, nodeType, isAction) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
+    event.dataTransfer.setData('isAction', isAction);
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -43,17 +45,32 @@ export default function Home() {
       event.preventDefault();
 
       const type = event.dataTransfer.getData('application/reactflow');
+      const isAction = event.dataTransfer.getData('isAction') === 'true';
       const position = { x: event.clientX - 250, y: event.clientY };
-      const newNode = {
-        id: `${type}-${nodes.length + 1}`,
-        type,
-        position,
-        data: { label: `${type} node` },
-      };
+      let newNode;
+      
+      if (isAction) {
+        const action = actionList.find(a => a.id === type);
+        newNode = {
+          id: `${type}-${nodes.length + 1}`,
+          type: action.type,
+          position,
+          data: { label: action.label },
+          style: { color: 'black' },
+        };
+      } else {
+        newNode = {
+          id: `${type}-${nodes.length + 1}`,
+          type: 'default',
+          position,
+          data: { label: `${type} agent` },
+          style: { color: 'black' },
+        };
+      }
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [nodes, setNodes]
+    [nodes, setNodes, actionList]
   );
 
   const onNodeClick = useCallback((event, node) => {
@@ -83,8 +100,7 @@ export default function Home() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically handle the creation of the new agent
-    console.log('New Agent:', newAgent);
+    setAgents(prev => [...prev, newAgent]);
     handleCloseModal();
   };
 
@@ -112,12 +128,12 @@ export default function Home() {
             justifyContent: 'space-between'
           }}>
             <div>
-              <h3>Agents</h3>
-              {blockList.map((block) => (
+              <h3>Actions</h3>
+              {actionList.map((action) => (
                 <div
-                  key={block.id}
+                  key={action.id}
                   draggable
-                  onDragStart={(event) => onDragStart(event, block.id)}
+                  onDragStart={(event) => onDragStart(event, action.id, true)}
                   style={{ 
                     margin: '10px 0',
                     padding: '10px',
@@ -126,7 +142,24 @@ export default function Home() {
                     cursor: 'move'
                   }}
                 >
-                  {block.label}
+                  {action.label}
+                </div>
+              ))}
+              <h3>Agents</h3>
+              {agents.map((agent, index) => (
+                <div
+                  key={index}
+                  draggable
+                  onDragStart={(event) => onDragStart(event, agent.name, false)}
+                  style={{ 
+                    margin: '10px 0',
+                    padding: '10px',
+                    border: '1px solid #ccc',
+                    borderRadius: '5px',
+                    cursor: 'move'
+                  }}
+                >
+                  {agent.name}
                 </div>
               ))}
             </div>
