@@ -16,6 +16,7 @@ export default function Home() {
   const [edges, setEdges] = useState([
     { id: 'e1-2', source: '1', target: '2', animated: true, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
   ]);
+  const [sidebarContent, setSidebarContent] = useState(null);
 
   const onConnect = useCallback((params) => setEdges((eds) => addEdge({ ...params, animated: true, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)), []);
 
@@ -28,6 +29,21 @@ export default function Home() {
     setNodes((nds) => nds.concat(newNode));
   }, [nodes]);
 
+  const onNodeClick = useCallback((event, node) => {
+    setSidebarContent(`Node clicked: ${node.id}`);
+  }, []);
+
+  const onEdgeClick = useCallback((event, edge) => {
+    setSidebarContent(`Edge clicked: ${edge.id}`);
+  }, []);
+
+  const onKeyDown = useCallback((event) => {
+    if (event.key === 'Delete') {
+      setNodes((nds) => nds.filter((node) => !node.selected));
+      setEdges((eds) => eds.filter((edge) => !edge.selected));
+    }
+  }, []);
+
   return (
     <main className={`${styles.main} ${styles.matrixBackground}`}>
       {!wallet ? (
@@ -39,27 +55,43 @@ export default function Home() {
           <div className={styles.matrixAnimation}></div>
         </>
       ) : (
-        <div style={{ width: '100%', height: '100vh' }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onConnect={onConnect}
-            fitView
-          >
-            <Controls />
-            <Background />
-            <button
-              style={{
-                position: 'absolute',
-                right: 10,
-                top: 10,
-                zIndex: 4,
-              }}
-              onClick={onAdd}
+        <div style={{ display: 'flex', width: '100%', height: '100vh' }}>
+          <div style={{ flex: 1, position: 'relative' }} onKeyDown={onKeyDown} tabIndex={0}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onEdgeClick={onEdgeClick}
+              fitView
             >
-              Add Node
-            </button>
-          </ReactFlow>
+              <Controls />
+              <Background />
+              <button
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: 10,
+                  zIndex: 4,
+                }}
+                onClick={onAdd}
+              >
+                Add Node
+              </button>
+            </ReactFlow>
+          </div>
+          {sidebarContent && (
+            <div style={{
+              width: '250px',
+              padding: '20px',
+              backgroundColor: '#f0f0f0',
+              borderLeft: '1px solid #ccc',
+              overflowY: 'auto'
+            }}>
+              <h3>Details</h3>
+              <p>{sidebarContent}</p>
+            </div>
+          )}
         </div>
       )}
     </main>
