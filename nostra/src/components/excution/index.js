@@ -96,7 +96,9 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
                       : "transparent",
                 }}
               >
-                <h3>Agent: {info.label}</h3>
+                <h3>
+                  {info.type === "agent" ? "Agent:" : "Action:"} {info.label}
+                </h3>
                 {info.response ? (
                   <p>
                     <ReactMarkdown>{info.response}</ReactMarkdown>
