@@ -1,33 +1,15 @@
-import { useContext, useState, useCallback, useRef } from "react";
-import dynamic from "next/dynamic";
+import { useContext, useState, useCallback, useRef, useEffect } from "react";
 import styles from "@/styles/app.module.css";
 import Logo from "/public/nostra.png";
 import { NearContext } from "@/wallets/near";
-
-const ReactFlow = dynamic(
-  () => import("@xyflow/react").then((mod) => mod.ReactFlow),
-  { ssr: false }
-);
-
-import { useNodesState, useEdgesState, useReactFlow } from "@xyflow/react";
-
-const Controls = dynamic(
-  () => import("@xyflow/react").then((mod) => mod.Controls),
-  { ssr: false }
-);
-const Background = dynamic(
-  () => import("@xyflow/react").then((mod) => mod.Background),
-  { ssr: false }
-);
-const addEdge = dynamic(
-  () => import("@xyflow/react").then((mod) => mod.addEdge),
-  { ssr: false }
-);
-const MarkerType = dynamic(
-  () => import("@xyflow/react").then((mod) => mod.MarkerType),
-  { ssr: false }
-);
-
+import {
+  ReactFlow,
+  useNodesState,
+  useEdgesState,
+  useReactFlow,
+} from "@xyflow/react";
+import { Controls, Background, addEdge, MarkerType } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import Welcome from "@/components/welcome";
 import LeftBar from "@/components/leftbar";
 import { actionList } from "@/utils/constant";
@@ -52,6 +34,9 @@ export default function Home() {
       style: { color: "black" },
     },
   ]);
+
+  console.log("nodes", nodes);
+
   const [edges, setEdges, onEdgesChange] = useEdgesState([
     {
       id: "e1-2",
@@ -67,6 +52,30 @@ export default function Home() {
   const [newAgent, setNewAgent] = useState({ name: "", desc: "", prompt: "" });
   const [agents, setAgents] = useState([]);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    try {
+      const relationshipMap = {};
+
+      edges.forEach((edge) => {
+        const { source, target } = edge;
+
+        if (!relationshipMap[source]) {
+          relationshipMap[source] = { parent: null, children: [] };
+        }
+
+        if (!relationshipMap[target]) {
+          relationshipMap[target] = { parent: null, children: [] };
+        }
+
+        relationshipMap[target].parent = source;
+
+        relationshipMap[source].children.push(target);
+      });
+
+      console.log(JSON.stringify(relationshipMap, null, 2));
+    } catch (e) {}
+  }, [edges]);
 
   const onConnect = useCallback(
     (params) =>
