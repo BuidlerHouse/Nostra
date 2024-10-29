@@ -6,14 +6,14 @@ export const actionList = [
 
 export const defaultAgents = [
   {
-    id: "📊 Position Management Bot",
-    label: "Position Management",
-    name: "📊 Position Management Bot",
+    id: "📊 Pricing Analysis Bot",
+    label: "Pricing Analysis",
+    name: "📊 Pricing Analysis Bot",
     type: "agent",
     description:
-      "An intelligent assistant for managing and optimizing portfolio positions, providing suggestions and adjustment strategies.",
+      "An assistant focused on pricing analysis, providing insights and suggestions based on current market dynamics.",
     prompt:
-      "Please provide position management and adjustment suggestions based on current market dynamics ",
+      "Please provide Pricing Analysis and adjustment suggestions based on current market dynamics ",
   },
   {
     id: "📈 Chart Analysis Bot",

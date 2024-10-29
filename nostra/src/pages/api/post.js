@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       ];
 
       let data = null;
-      if (agentLabel === "📊 Position Management Bot agent") {
+      if (agentLabel === "📊 Pricing Analysis Bot agent") {
         data = await getTokenData(token);
       } else if (agentLabel === "📈 Chart Analysis Bot agent") {
         data = await getChartData(token);
