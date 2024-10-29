@@ -1,5 +1,5 @@
 export const actionList = [
-  { id: "input", label: "📥 Input", type: "input" },
+  { id: "input", label: "📥 Input (name)", type: "input" },
   { id: "twitter-data", label: "🐦 Twitter Data", type: "default" },
   { id: "defi-swap", label: "💱 DeFi Swap", type: "output" },
 ];
@@ -13,7 +13,7 @@ export const defaultAgents = [
     description:
       "An intelligent assistant for managing and optimizing portfolio positions, providing suggestions and adjustment strategies.",
     prompt:
-      "Please provide position management and adjustment suggestions based on current market dynamics.",
+      "Please provide position management and adjustment suggestions based on current market dynamics ",
   },
   {
     id: "📈 Chart Analysis Bot",
@@ -23,7 +23,7 @@ export const defaultAgents = [
     description:
       "A bot focused on technical analysis, providing insights and trend predictions based on market charts.",
     prompt:
-      "Please analyze the current market chart and provide trend predictions and insights.",
+      "Please analyze the current market chart in 30 days and provide trend predictions and insights ",
   },
   {
     id: "🌐 Macro Analysis Bot",

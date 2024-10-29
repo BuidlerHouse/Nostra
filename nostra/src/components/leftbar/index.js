@@ -68,38 +68,37 @@ export default function LeftBar({
           </div>
         ))}
       </div>
-      <button
-        onClick={() => {
-          setIsModalOpen(true);
-        }}
+      <div
         style={{
-          padding: "10px",
-          backgroundColor: "#4CAF50",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginTop: "20px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          width: "100%",
+          gap: "10px",
         }}
       >
-        Create Agent
-      </button>
-      <button
-        onClick={() => {
-          getNodeRelationships();
-        }}
-        style={{
-          padding: "10px",
-          backgroundColor: "#4CAF50",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginTop: "20px",
-        }}
-      >
-        Excute
-      </button>
+        <button
+          styled={{
+            minWidth: "100%",
+          }}
+          onClick={() => {
+            setIsModalOpen(true);
+          }}
+        >
+          Create Agent
+        </button>
+        <button
+          styled={{
+            minWidth: "100%",
+          }}
+          onClick={() => {
+            getNodeRelationships();
+          }}
+        >
+          Excute
+        </button>
+      </div>
     </div>
   );
 }

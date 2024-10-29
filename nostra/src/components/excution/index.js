@@ -35,6 +35,8 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
         },
         body: JSON.stringify({
           prompt: excutionInfo[stepNum].description,
+          token: excutionInfo[0].response ? excutionInfo[0].response : "SOLANA",
+          agentLabel: excutionInfo[stepNum].label,
           message:
             excutionInfo[stepNum].prompt + "on token" + excutionInfo[0].response
               ? excutionInfo[0].response
@@ -51,11 +53,13 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
       setStepNum(stepNum + 1);
     }
   };
+
   useEffect(() => {
     if (excutionInfo) {
       if (stepNum < excutionInfo.length) excuteFunc();
     }
   }, [stepNum]);
+
   return (
     <>
       {excutionInfo && excutionInfo.length > 0 && (
@@ -64,7 +68,7 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
             margin: "20px",
             border: "1px solid #ccc",
             borderRadius: "8px",
-            width: "550px",
+            width: "850px",
             padding: "20px",
             background: "#f0f0f0",
             overflowY: "auto",
@@ -74,19 +78,35 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
             display: "flex",
             justifyContent: "space-between",
             flexDirection: "column",
+            cursor: "default",
           }}
         >
           <div>
             {excutionInfo.map((info, index) => (
-              <div key={index}>
-                <h3>Excution {index + 1}</h3>
-                <p>Agent: {info.label}</p>
+              <div
+                key={index}
+                style={{
+                  margin: "10px 0",
+                  padding: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "5px",
+                  background:
+                    info.status === "loading" && stepNum == index
+                      ? "#fff"
+                      : "transparent",
+                }}
+              >
+                <h3>Agent: {info.label}</h3>
                 {info.response ? (
                   <p>
-                    Response: <ReactMarkdown>{info.response}</ReactMarkdown>
+                    <ReactMarkdown>{info.response}</ReactMarkdown>
                   </p>
                 ) : null}
-                <p>{info.status === "loading" ? "waiting..." : null}</p>
+                <p>
+                  {info.status === "loading" && stepNum == index
+                    ? "waiting..."
+                    : null}
+                </p>
               </div>
             ))}
           </div>
@@ -94,7 +114,7 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <input
                 style={{
-                  minWidth: "80%",
+                  minWidth: "calc(100% - 50px)",
                   marginTop: "auto",
                   background: "transparent",
                   color: "black",
@@ -103,6 +123,17 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
                 placeholder="Enter input"
                 onChange={(e) => {
                   setInput(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setExcutionInfo((prev) => {
+                      const newInfo = [...prev];
+                      newInfo[stepNum].response = input;
+                      newInfo[stepNum].status = "finished";
+                      return newInfo;
+                    });
+                    setStepNum(stepNum + 1);
+                  }
                 }}
               />
               <button
@@ -116,14 +147,14 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
                   setStepNum(stepNum + 1);
                 }}
               >
-                send input
+                send
               </button>
             </div>
           )}
           <button
             style={{
               position: "absolute",
-              top: "32px",
+              top: "24px",
               right: "32px",
             }}
             onClick={() => {

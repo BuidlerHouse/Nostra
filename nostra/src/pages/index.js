@@ -83,6 +83,7 @@ export default function Home() {
           children: node.children,
           prompt: node.prompt,
           description: node.description,
+          status: "loading",
         };
 
         relationshipList.push(nodeData);
