@@ -5,6 +5,7 @@ export default function LeftBar({
   actionList,
   agents,
   setIsModalOpen,
+  getNodeRelationships,
 }) {
   return (
     <div
@@ -82,6 +83,22 @@ export default function LeftBar({
         }}
       >
         Create Agent
+      </button>
+      <button
+        onClick={() => {
+          getNodeRelationships();
+        }}
+        style={{
+          padding: "10px",
+          backgroundColor: "#4CAF50",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginTop: "20px",
+        }}
+      >
+        Excute
       </button>
     </div>
   );

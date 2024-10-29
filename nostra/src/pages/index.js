@@ -12,70 +12,132 @@ import { Controls, Background, addEdge, MarkerType } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import Welcome from "@/components/welcome";
 import LeftBar from "@/components/leftbar";
-import { actionList } from "@/utils/constant";
+import { actionList, defaultAgents } from "@/utils/constant";
 import RightBar from "@/components/rightbar";
 import AgentModal from "@/components/agentmodal";
+import Excution from "@/components/excution";
 
 export default function Home() {
   const { signedAccountId } = useContext(NearContext);
   const { screenToFlowPosition, getZoom } = useReactFlow();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([
-    {
-      id: "1",
-      position: { x: 250, y: 0 },
-      data: { label: "Node 1" },
-      style: { color: "black" },
-    },
-    {
-      id: "2",
-      position: { x: 350, y: 100 },
-      data: { label: "Node 2" },
-      style: { color: "black" },
-    },
-  ]);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
-  console.log("nodes", nodes);
-
-  const [edges, setEdges, onEdgesChange] = useEdgesState([
-    {
-      id: "e1-2",
-      source: "1",
-      target: "2",
-      animated: true,
-      type: "smoothstep",
-      markerEnd: { type: MarkerType.ArrowClosed },
-    },
-  ]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newAgent, setNewAgent] = useState({ name: "", desc: "", prompt: "" });
-  const [agents, setAgents] = useState([]);
+  const [excutionInfo, setExcutionInfo] = useState(null);
+  const [isExcutionModalOpen, setIsExcutionModalOpen] = useState(false);
+  const [newAgent, setNewAgent] = useState({
+    id: "",
+    label: "",
+    name: "🤖 Bot",
+    description: "",
+    prompt: "",
+  });
+  const [agents, setAgents] = useState(defaultAgents);
   const dragOffset = useRef({ x: 0, y: 0 });
 
-  useEffect(() => {
+  const getNodeRelationships = () => {
     try {
       const relationshipMap = {};
 
+      // Initialize relationshipMap with node details
+      nodes.forEach((node) => {
+        relationshipMap[node.id] = {
+          ...node.data, // Add data properties like label, name, description, etc.
+          parent: null,
+          children: [],
+        };
+      });
+
+      // Update relationshipMap with edges information
       edges.forEach((edge) => {
         const { source, target } = edge;
 
         if (!relationshipMap[source]) {
           relationshipMap[source] = { parent: null, children: [] };
         }
-
         if (!relationshipMap[target]) {
           relationshipMap[target] = { parent: null, children: [] };
         }
 
         relationshipMap[target].parent = source;
-
         relationshipMap[source].children.push(target);
       });
 
-      console.log(JSON.stringify(relationshipMap, null, 2));
-    } catch (e) {}
-  }, [edges]);
+      // Build relationshipList based on parent-child structure
+      const relationshipList = [];
+      const addedNodes = new Set();
+
+      // Helper function to add node and its children
+      const addNodeWithChildren = (nodeId) => {
+        if (addedNodes.has(nodeId)) return; // Avoid duplicate entries
+
+        const node = relationshipMap[nodeId];
+        const nodeData = {
+          id: nodeId,
+          label: node.label,
+          type: node.type,
+          parent: node.parent,
+          children: node.children,
+          prompt: node.prompt,
+          description: node.description,
+        };
+
+        relationshipList.push(nodeData);
+        addedNodes.add(nodeId);
+
+        // Recursively add children
+        node.children.forEach((childId) => addNodeWithChildren(childId));
+      };
+
+      // Start with nodes having parent as null
+      Object.keys(relationshipMap).forEach((nodeId) => {
+        if (relationshipMap[nodeId].parent === null) {
+          addNodeWithChildren(nodeId);
+        }
+      });
+
+      // Set list as JSON string for modal display
+      setExcutionInfo(relationshipList);
+      setIsExcutionModalOpen(true);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const relationshipMap = {};
+
+      // Initialize relationshipMap with node details
+      nodes.forEach((node) => {
+        relationshipMap[node.id] = {
+          ...node.data, // Add data properties like label, name, description, etc.
+          parent: null,
+          children: [],
+        };
+      });
+
+      // Update relationshipMap with edges information
+      edges.forEach((edge) => {
+        const { source, target } = edge;
+
+        if (!relationshipMap[source]) {
+          relationshipMap[source] = { parent: null, children: [] };
+        }
+        if (!relationshipMap[target]) {
+          relationshipMap[target] = { parent: null, children: [] };
+        }
+
+        relationshipMap[target].parent = source;
+        relationshipMap[source].children.push(target);
+      });
+    } catch (e) {
+      console.error("Error building relationshipMap:", e);
+    }
+  }, [nodes, edges]);
 
   const onConnect = useCallback(
     (params) =>
@@ -121,28 +183,37 @@ export default function Home() {
         x: event.clientX - dragOffset.current.x * getZoom(),
         y: event.clientY - dragOffset.current.y * getZoom(),
       });
+
       if (isAction) {
         const action = actionList.find((a) => a.id === type);
         newNode = {
           id: `${type}-${nodes.length + 1}`,
           type: action.type,
           position,
-          data: { label: action.label },
+          data: {
+            label: action.label,
+            type: action.type || "agent",
+          },
           style: { color: "black" },
         };
       } else {
+        const agent = agents.find((a) => a.id === type);
         newNode = {
           id: `${type}-${nodes.length + 1}`,
-          type: "default",
           position,
-          data: { label: `${type} agent` },
+          data: {
+            label: `${type} agent`,
+            type: "agent",
+            description: agent?.description || "Default agent description",
+            prompt: agent?.prompt || "Default agent prompt",
+          },
           style: { color: "black" },
         };
       }
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [nodes, setNodes, actionList]
+    [nodes, setNodes, actionList, agents]
   );
 
   const onNodeClick = useCallback((event, node) => {
@@ -176,7 +247,20 @@ export default function Home() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setAgents((prev) => [...prev, newAgent]);
+    const agentWithIdAndLabel = {
+      ...newAgent,
+      id: newAgent.name,
+      label: newAgent.name,
+    };
+    setAgents((prev) => [...prev, agentWithIdAndLabel]);
+    setNewAgent({
+      id: "",
+      label: "",
+      name: "",
+      description: "",
+      prompt: "",
+      type: "agent",
+    });
     handleCloseModal();
   };
 
@@ -191,6 +275,7 @@ export default function Home() {
             actionList={actionList}
             agents={agents}
             setIsModalOpen={setIsModalOpen}
+            getNodeRelationships={getNodeRelationships}
           />
           {/* main content */}
           <div
@@ -232,6 +317,12 @@ export default function Home() {
             handleSubmit={handleSubmit}
             handleCloseModal={handleCloseModal}
           />
+          {isExcutionModalOpen && (
+            <Excution
+              excutionInfo={excutionInfo}
+              setExcutionInfo={setExcutionInfo}
+            />
+          )}
         </div>
       )}
     </main>

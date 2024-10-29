@@ -67,13 +67,13 @@ export default function AgentModal({
                 />
               </div>
               <div style={{ marginBottom: "10px" }}>
-                <label htmlFor="desc" style={{ color: "black" }}>
+                <label htmlFor="description" style={{ color: "black" }}>
                   Description:
                 </label>
                 <textarea
-                  id="desc"
-                  name="desc"
-                  value={newAgent.desc}
+                  id="description"
+                  name="description"
+                  value={newAgent.description} // 使用 description
                   onChange={handleInputChange}
                   style={{
                     width: "100%",

@@ -28,8 +28,10 @@
     "bootstrap-icons": "^1.11.3",
     "near-api-js": "^4.0.3",
     "next": "14.2.13",
+    "openai": "^4.68.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-markdown": "^9.0.1",
     "wagmi": "^2.12.16"
   },
   "overrides": {

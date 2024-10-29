@@ -22,7 +22,7 @@ export default function RightBar({ selectedNode, removeNodeFromPad }) {
         >
           <h3>Node Details</h3>
           <p>ID: {selectedNode.id}</p>
-          <p>Type: {selectedNode.type}</p>
+          <p>Type: {selectedNode.data.type}</p>
           <p>Label: {selectedNode.data.label}</p>
           <button
             onClick={() => {
