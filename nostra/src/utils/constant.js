@@ -2,6 +2,7 @@ export const actionList = [
   { id: "input", label: "📥 Input (name)", type: "input" },
   { id: "twitter-data", label: "🐦 Twitter Data", type: "default" },
   { id: "defi-swap", label: "💱 DeFi Swap", type: "output" },
+  { id: "near-social", label: "🔗 Near Social", type: "output" },
 ];
 
 export const defaultAgents = [

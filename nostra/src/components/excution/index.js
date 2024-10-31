@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { NearContext } from "@/wallets/near";
 
 export default function Excution({ excutionInfo, setExcutionInfo }) {
-  const { wallet } = useContext(NearContext);
+  const { signedAccountId, wallet } = useContext(NearContext);
   const [stepNum, setStepNum] = useState(0);
   const [input, setInput] = useState("");
   useEffect(() => {
@@ -23,48 +23,95 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
       setInput("");
     }
     if (excutionInfo[stepNum].type == "output") {
+      console.log(excutionInfo)
       setExcutionInfo((prev) => {
         const newInfo = [...prev];
         newInfo[stepNum].status = "loading";
         return newInfo;
       });
-      const response = await fetch('/api/swap', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'mb-metadata': JSON.stringify({ accountData: { accountId: 'near' } })
-          },
-          body: JSON.stringify({
-            tokenIn: 'NEAR',
-            tokenOut: 'USDC', 
-            quantity: '1'
-          })
-        });
-        const transactions = await response.json();
-        // NEAR
-        const formattedTransactions = transactions.map(tx => ({
-          receiverId: tx.receiverId,
-          actions: tx.functionCalls.map(call => ({
-            type: "FunctionCall",
-            params: {
-              methodName: call.methodName,
-              args: call.args,
-              gas: call.gas
-            }
-          }))
-        }));
-          await wallet.signAndSendTransactions({ 
-            transactions: formattedTransactions 
+      if (excutionInfo[stepNum].label == "💱 DeFi Swap") {
+        const response = await fetch('/api/swap', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'mb-metadata': JSON.stringify({ accountData: { accountId: 'near' } })
+            },
+            body: JSON.stringify({
+              tokenIn: 'NEAR',
+              tokenOut: 'USDC', 
+              quantity: '0.01'
+            })
           });
-        // NEAR END
-        
-        setExcutionInfo((prev) => {
-          const newInfo = [...prev];
-          newInfo[stepNum].response = JSON.stringify(data, null, 2);
-          newInfo[stepNum].status = "finished";
-          return newInfo;
-        });
-      setStepNum(stepNum + 1);
+          const transactions = await response.json();
+          // NEAR
+          const formattedTransactions = transactions.map(tx => ({
+            receiverId: tx.receiverId,
+            actions: tx.functionCalls.map(call => ({
+              type: "FunctionCall",
+              params: {
+                methodName: call.methodName,
+                args: call.args,
+                gas: call.gas,
+                deposit: "0.000000000000001"
+              }
+            }))
+          }));
+            await wallet.signAndSendTransactions({ 
+              transactions: formattedTransactions 
+            });
+          // NEAR END
+          setExcutionInfo((prev) => {
+            const newInfo = [...prev];
+            newInfo[stepNum].response = JSON.stringify(data, null, 2);
+            newInfo[stepNum].status = "finished";
+            return newInfo;
+          });
+        }
+        if (excutionInfo[stepNum].label == "🔗 Near Social") {
+          const postMsg = excutionInfo[stepNum-1].response;
+          const transaction = {
+            receiverId: "social.near",
+            actions: [{
+              type: "FunctionCall",
+              params: {
+                methodName: "set",
+                args: {
+                  data: {
+                    [signedAccountId]: {
+                      post: {
+                        main: JSON.stringify({
+                          type: "md",
+                          text: postMsg
+                        })
+                      },
+                      index: {
+                        post: JSON.stringify({
+                          key: "main",
+                          value: {
+                            type: "md"
+                          }
+                        })
+                      }
+                    }
+                  }
+                },
+                gas: "300000000000000"
+              }
+            }]
+          };
+          
+          await wallet.signAndSendTransactions({
+            transactions: [transaction]
+          });
+
+          setExcutionInfo((prev) => {
+            const newInfo = [...prev];
+            newInfo[stepNum].response = "Posted to Near Social successfully";
+            newInfo[stepNum].status = "finished";
+            return newInfo;
+          });
+        }
+        setStepNum(stepNum + 1);
     }
     if (excutionInfo[stepNum].type == "agent") {
       setExcutionInfo((prev) => {
@@ -79,12 +126,12 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
         },
         body: JSON.stringify({
           prompt: excutionInfo[stepNum].description,
-          token: excutionInfo[0].response ? excutionInfo[0].response : "SOLANA",
+          token: "near", // excutionInfo[0].response ? excutionInfo[0].response : "NEAR",
           agentLabel: excutionInfo[stepNum].label,
           message:
             excutionInfo[stepNum].prompt + "on token" + excutionInfo[0].response
               ? excutionInfo[0].response
-              : "SOLANA",
+              : "NEAR",
         }),
       });
       const res = await response.json();
