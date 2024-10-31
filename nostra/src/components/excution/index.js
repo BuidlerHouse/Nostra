@@ -52,10 +52,11 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
                 methodName: call.methodName,
                 args: call.args,
                 gas: call.gas,
-                deposit: "0.000000000000001"
+                deposit: call.deposit || "1"
               }
             }))
           }));
+          console.log(formattedTransactions)
             await wallet.signAndSendTransactions({ 
               transactions: formattedTransactions 
             });

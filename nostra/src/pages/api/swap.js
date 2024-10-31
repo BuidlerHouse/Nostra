@@ -30,7 +30,6 @@ export default async function handler(request, response) {
     const headers = request.headers;
     const mbMetadata = JSON.parse(headers["mb-metadata"] || "{}");
     const accountId = mbMetadata?.accountData?.accountId || "near";
-
     const { ratedPools, unRatedPools, simplePools } = await fetchAllPools();
 
     const stablePools = unRatedPools.concat(ratedPools);
