@@ -1,0 +1,1 @@
+export CONTRACT=nosta-test.prelaunch.testnet
