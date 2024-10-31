@@ -1,8 +1,10 @@
 import "@xyflow/react/dist/style.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import ReactMarkdown from "react-markdown";
+import { NearContext } from "@/wallets/near";
 
 export default function Excution({ excutionInfo, setExcutionInfo }) {
+  const { wallet } = useContext(NearContext);
   const [stepNum, setStepNum] = useState(0);
   const [input, setInput] = useState("");
   useEffect(() => {
@@ -21,6 +23,48 @@ export default function Excution({ excutionInfo, setExcutionInfo }) {
       setInput("");
     }
     if (excutionInfo[stepNum].type == "output") {
+      setExcutionInfo((prev) => {
+        const newInfo = [...prev];
+        newInfo[stepNum].status = "loading";
+        return newInfo;
+      });
+      const response = await fetch('/api/swap', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'mb-metadata': JSON.stringify({ accountData: { accountId: 'near' } })
+          },
+          body: JSON.stringify({
+            tokenIn: 'NEAR',
+            tokenOut: 'USDC', 
+            quantity: '1'
+          })
+        });
+        const transactions = await response.json();
+        // NEAR
+        const formattedTransactions = transactions.map(tx => ({
+          receiverId: tx.receiverId,
+          actions: tx.functionCalls.map(call => ({
+            type: "FunctionCall",
+            params: {
+              methodName: call.methodName,
+              args: call.args,
+              gas: call.gas
+            }
+          }))
+        }));
+          await wallet.signAndSendTransactions({ 
+            transactions: formattedTransactions 
+          });
+        // NEAR END
+        
+        setExcutionInfo((prev) => {
+          const newInfo = [...prev];
+          newInfo[stepNum].response = JSON.stringify(data, null, 2);
+          newInfo[stepNum].status = "finished";
+          return newInfo;
+        });
+      setStepNum(stepNum + 1);
     }
     if (excutionInfo[stepNum].type == "agent") {
       setExcutionInfo((prev) => {

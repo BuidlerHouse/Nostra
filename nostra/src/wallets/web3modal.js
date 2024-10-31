@@ -22,7 +22,7 @@ const near = {
       url: EVMWalletChain.explorer,
     },
   },
-  testnet: NetworkId === "testnet",
+  mainnet: NetworkId === "mainnet",
 };
 
 // Get your projectId at https://cloud.reown.com
