@@ -18,7 +18,7 @@ import AgentModal from "@/components/agentmodal";
 import Excution from "@/components/excution";
 
 export default function Home() {
-  const { signedAccountId } = useContext(NearContext);
+  const { signedAccountId, wallet } = useContext(NearContext);
   const { screenToFlowPosition, getZoom } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -35,8 +35,45 @@ export default function Home() {
     description: "",
     prompt: "",
   });
-  const [agents, setAgents] = useState(defaultAgents);
+
+  const [agents, setAgents] = useState([]);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const loadAgents = async () => {
+      try {
+        const contractAgents = await wallet.viewMethod({
+          contractId: "nostra.opshenry.near",
+          method: "get_agents"
+        });
+
+        // Transform defaultAgents to match contract format
+        const formattedDefaultAgents = defaultAgents.map(agent => ({
+          name: agent.name,
+          description: agent.description,
+          prompt: agent.prompt
+        }));
+
+        // Combine contract agents with default agents
+        const allAgents = [...contractAgents, ...formattedDefaultAgents].map(agent => ({
+          id: agent.name,
+          label: agent.name,
+          name: agent.name,
+          type: "agent",
+          description: agent.description,
+          prompt: agent.prompt
+        }));
+
+        setAgents(allAgents);
+      } catch (error) {
+        console.error("Error loading agents:", error);
+        // Fallback to default agents if contract call fails
+        setAgents(defaultAgents);
+      }
+    };
+
+    loadAgents();
+  }, [wallet]);
 
   const getNodeRelationships = () => {
     try {

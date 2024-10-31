@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Logo from "/public/nostra.png";
 import "@xyflow/react/dist/style.css";
+import { NearContext } from "@/wallets/near";
+import { useContext } from "react";
 
 export default function AgentModal({
   isModalOpen,
@@ -9,6 +11,27 @@ export default function AgentModal({
   handleSubmit,
   handleCloseModal,
 }) {
+  const { signedAccountId, wallet } = useContext(NearContext);
+
+  const handleCreateAgent = async (e) => {
+    e.preventDefault();
+    try {
+      await wallet.callMethod({
+        contractId: "nostra.opshenry.near",
+        method: "add_agent",
+        args: {
+          name: newAgent.name,
+          description: newAgent.description,
+          prompt: newAgent.prompt,
+        },
+        gas: "300000000000000",
+      });
+      handleSubmit(e);
+    } catch (error) {
+      console.error("Error creating agent:", error);
+    }
+  };
+
   return (
     <>
       {isModalOpen && (
@@ -46,7 +69,7 @@ export default function AgentModal({
             >
               <Image src={Logo} alt="Nostra" width={100} height={100} />
             </div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleCreateAgent}>
               <div style={{ marginBottom: "10px", color: "black" }}>
                 <label htmlFor="name" style={{ color: "black" }}>
                   Name:
@@ -73,7 +96,7 @@ export default function AgentModal({
                 <textarea
                   id="description"
                   name="description"
-                  value={newAgent.description} // 使用 description
+                  value={newAgent.description}
                   onChange={handleInputChange}
                   style={{
                     width: "100%",

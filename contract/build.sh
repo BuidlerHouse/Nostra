@@ -2,4 +2,4 @@
 set -e
 
 RUSTFLAGS='-C link-arg=-s' cargo build --target wasm32-unknown-unknown --release
-cp target/wasm32-unknown-unknown/release/daip.wasm out/core.wasm
+cp target/wasm32-unknown-unknown/release/nostra.wasm out/main.wasm
